@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
 import {
-    Shield, Clock, AlertTriangle, CheckCircle, XCircle,
-    Filter, Search, Download, ChevronDown, ChevronUp,
+    Shield, Search, Download, ChevronDown, ChevronUp,
     Terminal, Lock, Fingerprint, Eye, FileText
 } from 'lucide-react';
 import Card from '../components/Card';
@@ -10,6 +9,8 @@ import Badge from '../components/Badge';
 import Button from '../components/Button';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getAuditLogs, exportAuditLogs, getAdminClinicalNotes } from '../api';
+
+const MotionDiv = motion.div;
 
 const Logs = () => {
     const { user } = useAuth();
@@ -46,6 +47,13 @@ const Logs = () => {
         fetchLogs();
     }, [fetchLogs]);
 
+    const summary = {
+        total: logs.length,
+        granted: logs.filter(log => log.decision === 'Granted' || log.decision === 'GRANTED').length,
+        flagged: logs.filter(log => log.decision === 'Flagged' || log.decision === 'FLAGGED').length,
+        restricted: logs.filter(log => log.decision === 'Restricted' || log.decision === 'RESTRICTED').length,
+    };
+
     const toggleRow = (id) => {
         setExpandedRow(expandedRow === id ? null : id);
     };
@@ -57,7 +65,7 @@ const Logs = () => {
                     <h1 className="text-4xl font-black mb-2 tracking-tight italic">Security Audit Intelligence</h1>
                     <p className="text-[var(--text-muted)] text-sm font-medium flex items-center gap-2">
                         <Lock className="h-4 w-4 text-[var(--accent-primary)]" />
-                        Complete immutable record of Zero-Trust access and AI decisions
+                        Admin review console for access attempts, AI outcomes, and patient-level notes
                     </p>
                 </div>
                 <div className="flex items-center gap-3">
@@ -67,21 +75,35 @@ const Logs = () => {
                 </div>
             </div>
 
-            {/* Filters Bar */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full">
-                <div className="md:col-span-2 relative">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {[
+                    { label: 'Total Events', value: summary.total, tone: 'text-white' },
+                    { label: 'Granted', value: summary.granted, tone: 'text-[var(--accent-success)]' },
+                    { label: 'Flagged', value: summary.flagged, tone: 'text-[var(--accent-warning)]' },
+                    { label: 'Restricted', value: summary.restricted, tone: 'text-[var(--accent-danger)]' },
+                ].map(item => (
+                    <Card key={item.label} className="p-5 border-[var(--border-color)] bg-[var(--bg-card)]/30 backdrop-blur-xl ring-1 ring-white/5">
+                        <p className="text-[10px] font-black uppercase tracking-[0.22em] text-[var(--text-muted)]">{item.label}</p>
+                        <p className={`mt-2 text-3xl font-black italic tracking-tight ${item.tone}`}>{item.value}</p>
+                    </Card>
+                ))}
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_220px] gap-4 w-full">
+                <div className="relative">
                     <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--text-muted)] h-5 w-5" />
                     <input
                         type="text"
-                        placeholder="Search by identity, patient ID, or action..."
+                        placeholder="Filter by username..."
                         className="w-full bg-[var(--bg-card)] border border-[var(--border-color)] rounded-2xl pl-12 pr-6 py-4 focus:outline-none focus:border-[var(--accent-primary)] transition-all font-bold placeholder:text-[var(--text-muted)] shadow-lg"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                     />
                 </div>
-                <div>
+                <div className="flex items-center gap-3 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)]/30 px-4">
+                    <span className="text-[10px] font-black uppercase tracking-[0.22em] text-[var(--text-muted)]">Decision</span>
                     <select
-                        className="w-full bg-[var(--bg-card)] border border-[var(--border-color)] rounded-2xl px-6 py-4 focus:outline-none focus:border-[var(--accent-primary)] transition-all font-black text-xs uppercase tracking-widest shadow-lg appearance-none cursor-pointer"
+                        className="w-full bg-transparent py-4 focus:outline-none font-black text-xs uppercase tracking-widest appearance-none cursor-pointer"
                         value={filterDecision}
                         onChange={(e) => setFilterDecision(e.target.value)}
                     >
@@ -129,13 +151,16 @@ const Logs = () => {
                                                 <div className="p-2 rounded-lg bg-[var(--bg-dark)] border border-[var(--border-color)]">
                                                     <Fingerprint className="h-4 w-4 text-[var(--accent-primary)]" />
                                                 </div>
-                                                <span className="font-black text-white text-sm truncate" title={log.user || log.username}>{log.user || log.username}</span>
+                                                <div className="flex flex-col min-w-0">
+                                                    <span className="font-black text-white text-sm truncate" title={log.user || log.username}>{log.user || log.username}</span>
+                                                    <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-[var(--text-muted)]">{log.displayName || 'Authenticated User'}</span>
+                                                </div>
                                             </div>
                                         </td>
                                         <td className="px-2 py-3 overflow-hidden text-ellipsis whitespace-nowrap max-w-0" title={log.action}>
                                             <div className="flex flex-col">
                                                 <span className="text-sm font-bold text-white truncate">{log.action}</span>
-                                                <span className="text-[10px] text-[var(--text-muted)] font-bold uppercase tracking-widest truncate">{log.patientId || 'SYSTEM'}</span>
+                                                <span className="text-[10px] text-[var(--text-muted)] font-bold uppercase tracking-widest truncate">{log.patientId || 'System Event'}</span>
                                             </div>
                                         </td>
                                         <td className="px-2 py-3 overflow-hidden text-ellipsis whitespace-nowrap max-w-0">
@@ -155,14 +180,14 @@ const Logs = () => {
                                             </div>
                                         </td>
                                         <td className="px-2 py-3 pr-6 text-right font-mono text-xs text-[var(--text-secondary)] font-bold overflow-hidden text-ellipsis whitespace-nowrap max-w-0">
-                                            {new Date(log.timestamp).toLocaleTimeString()}
+                                            {new Date(log.timestamp).toLocaleString()}
                                         </td>
                                     </tr>
                                     <AnimatePresence>
                                         {expandedRow === log.id && (
                                             <tr>
                                                 <td colSpan="6" className="p-0">
-                                                    <motion.div
+                                                    <MotionDiv
                                                         initial={{ height: 0, opacity: 0 }}
                                                         animate={{ height: 'auto', opacity: 1 }}
                                                         exit={{ height: 0, opacity: 0 }}
@@ -209,7 +234,7 @@ const Logs = () => {
                                                                 )}
                                                             </div>
                                                         </div>
-                                                    </motion.div>
+                                                    </MotionDiv>
                                                 </td>
                                             </tr>
                                         )}

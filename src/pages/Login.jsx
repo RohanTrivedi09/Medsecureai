@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { User, Lock, Stethoscope, ShieldCheck } from 'lucide-react';
+import { Lock, Stethoscope, ShieldCheck } from 'lucide-react';
 import Card from '../components/Card';
 import Button from '../components/Button';
 import Input from '../components/Input';
@@ -20,7 +20,7 @@ const Login = () => {
         setError('');
         setLoading(true);
 
-        const result = await login(username, password);
+        const result = await login(username, password, role);
         setLoading(false);
 
         if (result.success) {
@@ -38,13 +38,16 @@ const Login = () => {
                 <div className="absolute top-1/3 left-0 w-full h-[1px] bg-[var(--accent-secondary)] animate-[ecg-pulse_6s_infinite_linear_reverse]"></div>
             </div>
 
-            <div className="w-full max-w-[400px] relative z-10 animate-fade-in-up">
+            <div className="w-full max-w-[430px] relative z-10 animate-fade-in-up">
                 <div className="text-center mb-10">
                     <div className="inline-flex items-center justify-center p-3 rounded-2xl bg-[var(--accent-primary)]/10 text-[var(--accent-primary)] mb-4 ring-1 ring-[var(--accent-primary)]/20 shadow-lg">
                         <Lock className="h-8 w-8" />
                     </div>
                     <h2 className="text-4xl font-extrabold mb-2 tracking-tight text-white">MedSecure<span className="text-[var(--accent-primary)]">AI</span></h2>
                     <p className="text-[var(--text-secondary)] font-medium">Secure Zero-Trust Portal</p>
+                    <p className="mt-3 text-xs uppercase tracking-[0.24em] text-[var(--text-muted)]">
+                        Select the account role before signing in
+                    </p>
                 </div>
 
                 {isLocked && (
@@ -62,6 +65,18 @@ const Login = () => {
 
                 <Card className="backdrop-blur-2xl bg-[var(--bg-card)]/70 border-[var(--border-color)] shadow-[0_20px_50px_rgba(0,0,0,0.5)] ring-1 ring-white/5">
                     <form onSubmit={handleLogin} className="space-y-6">
+                        <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-dark)]/35 p-4">
+                            <div className="flex items-center justify-between gap-4">
+                                <div>
+                                    <p className="text-[10px] font-black uppercase tracking-[0.24em] text-[var(--text-muted)]">Prototype Access</p>
+                                    <p className="mt-1 text-sm font-semibold text-white">Use the matching account role to open the correct dashboard.</p>
+                                </div>
+                                <div className={`rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em] ${role === 'doctor' ? 'bg-[var(--accent-primary)]/15 text-[var(--accent-primary)]' : 'bg-[var(--accent-warning)]/15 text-[var(--accent-warning)]'}`}>
+                                    {role}
+                                </div>
+                            </div>
+                        </div>
+
                         <Input
                             label="Username"
                             placeholder="e.g. dr.smith"
@@ -84,21 +99,25 @@ const Login = () => {
                         <div className="space-y-3">
                             <label className="block text-xs font-bold text-[var(--text-muted)] uppercase tracking-[0.2em]">Access Role</label>
                             <div className="grid grid-cols-2 gap-4">
-                                <div
+                                <button
+                                    type="button"
                                     className={`cursor-pointer border rounded-2xl p-4 flex flex-col items-center gap-3 transition-all duration-300 ${role === 'doctor' ? 'border-[var(--accent-primary)] bg-[var(--accent-primary)]/10 ring-1 ring-[var(--accent-primary)]/40' : 'border-[var(--border-color)] bg-[var(--bg-dark)]/20 hover:border-[var(--text-secondary)]'}`}
                                     onClick={() => setRole('doctor')}
                                 >
                                     <Stethoscope className={`h-7 w-7 ${role === 'doctor' ? 'text-[var(--accent-primary)]' : 'text-[var(--text-muted)]'}`} />
                                     <span className={`text-sm font-bold ${role === 'doctor' ? 'text-white' : 'text-[var(--text-muted)]'}`}>Doctor</span>
-                                </div>
+                                    <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-[var(--text-muted)]">Records Access</span>
+                                </button>
 
-                                <div
+                                <button
+                                    type="button"
                                     className={`cursor-pointer border rounded-2xl p-4 flex flex-col items-center gap-3 transition-all duration-300 ${role === 'admin' ? 'border-[var(--accent-warning)] bg-[var(--accent-warning)]/10 ring-1 ring-[var(--accent-warning)]/40' : 'border-[var(--border-color)] bg-[var(--bg-dark)]/20 hover:border-[var(--text-secondary)]'}`}
                                     onClick={() => setRole('admin')}
                                 >
                                     <ShieldCheck className={`h-7 w-7 ${role === 'admin' ? 'text-[var(--accent-warning)]' : 'text-[var(--text-muted)]'}`} />
                                     <span className={`text-sm font-bold ${role === 'admin' ? 'text-white' : 'text-[var(--text-muted)]'}`}>Admin</span>
-                                </div>
+                                    <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-[var(--text-muted)]">Audit Oversight</span>
+                                </button>
                             </div>
                         </div>
 
@@ -111,13 +130,23 @@ const Login = () => {
                         </Button>
                     </form>
 
-                    {lastLogin && (
-                        <div className="mt-6 pt-6 border-t border-[var(--border-color)]/50 text-center">
-                            <p className="text-[10px] text-[var(--text-muted)] font-medium uppercase tracking-widest">
+                    <div className="mt-6 pt-6 border-t border-[var(--border-color)]/50 space-y-3">
+                        {lastLogin && (
+                            <p className="text-[10px] text-center text-[var(--text-muted)] font-medium uppercase tracking-widest">
                                 Last login: {lastLogin}
                             </p>
+                        )}
+                        <div className="grid grid-cols-2 gap-3 text-[10px]">
+                            <div className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-dark)]/35 p-3">
+                                <p className="font-black uppercase tracking-[0.18em] text-[var(--text-muted)]">Doctor Demo</p>
+                                <p className="mt-1 font-semibold text-white">`dr.smith` / `doctor123`</p>
+                            </div>
+                            <div className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-dark)]/35 p-3">
+                                <p className="font-black uppercase tracking-[0.18em] text-[var(--text-muted)]">Admin Demo</p>
+                                <p className="mt-1 font-semibold text-white">`admin` / `admin123`</p>
+                            </div>
                         </div>
-                    )}
+                    </div>
                 </Card>
 
             </div>

@@ -78,7 +78,7 @@ function App() {
                 </ProtectedRoute>
               } />
               <Route path="logs" element={
-                <ProtectedRoute>
+                <ProtectedRoute allowedRoles={['admin']}>
                   <Logs />
                 </ProtectedRoute>
               } />

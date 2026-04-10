@@ -1,12 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import {
-    LayoutDashboard, Users, List, ShieldAlert, Settings,
-    ArrowUpRight, ArrowDownRight, Activity, Zap,
-    UserX, Key, Filter, Download, MoreHorizontal
+    Users, ShieldAlert, ArrowUpRight, ArrowDownRight, Activity, Zap
 } from 'lucide-react';
 import Card from '../components/Card';
 import Badge from '../components/Badge';
-import Button from '../components/Button';
 import {
     Chart as ChartJS,
     CategoryScale,
@@ -91,7 +88,24 @@ const AdminDashboard = () => {
             <AdminSidebar />
 
             <div className="flex-grow space-y-8 overflow-hidden">
-                {/* Stats Row */}
+                <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
+                    <div>
+                        <p className="text-[10px] font-black uppercase tracking-[0.24em] text-[var(--text-muted)]">Admin Overview</p>
+                        <h1 className="mt-2 text-4xl font-black tracking-tight italic">Operational Security Dashboard</h1>
+                        <p className="mt-2 text-sm text-[var(--text-muted)]">Live snapshot of access volume, risk signals, and simulated AI activity.</p>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-3">
+                        <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)]/35 px-4 py-3">
+                            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-muted)]">Mode</p>
+                            <p className="mt-1 text-sm font-semibold text-white">Academic Prototype</p>
+                        </div>
+                        <div className="rounded-2xl border border-[var(--accent-success)]/25 bg-[var(--accent-success)]/10 px-4 py-3">
+                            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--accent-success)]">Status</p>
+                            <p className="mt-1 text-sm font-semibold text-white">Monitoring Active</p>
+                        </div>
+                    </div>
+                </div>
+
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                     {stats.map((stat, i) => (
                         <Card key={i} className="p-6 border-[var(--border-color)] bg-[var(--bg-card)]/40 backdrop-blur-xl ring-1 ring-white/5 relative overflow-hidden group">
@@ -153,9 +167,12 @@ const AdminDashboard = () => {
                                             </tr>
                                         ) : realTimeLogs.map((log) => (
                                             <tr key={log.id} className="hover:bg-white/5 transition-all">
-                                                <td className="px-2 py-3 text-xs font-bold text-[var(--text-secondary)] overflow-hidden text-ellipsis whitespace-nowrap max-w-0">{new Date(log.timestamp).toLocaleTimeString()}</td>
+                                                <td className="px-2 py-3 text-xs font-bold text-[var(--text-secondary)] overflow-hidden text-ellipsis whitespace-nowrap max-w-0">{new Date(log.timestamp).toLocaleString()}</td>
                                                 <td className="px-2 py-3 overflow-hidden text-ellipsis whitespace-nowrap max-w-0">
-                                                    <span className="text-xs font-black text-white truncate" title={log.user || log.username}>{log.user || log.username}</span>
+                                                    <div className="flex flex-col min-w-0">
+                                                        <span className="text-xs font-black text-white truncate" title={log.user || log.username}>{log.user || log.username}</span>
+                                                        <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-[var(--text-muted)] truncate">{log.displayName || 'Authenticated User'}</span>
+                                                    </div>
                                                 </td>
                                                 <td className="px-2 py-3 text-xs font-medium text-[var(--text-secondary)] overflow-hidden text-ellipsis whitespace-nowrap max-w-0" title={log.action}>{log.action}</td>
                                                 <td className="px-2 py-3 overflow-hidden text-ellipsis whitespace-nowrap max-w-0">
@@ -206,6 +223,10 @@ const AdminDashboard = () => {
                                         <span className={`text-[10px] font-black ${d.color}`}>{d.risk}</span>
                                     </div>
                                 ))}
+                            </Card>
+                            <Card className="p-6 border-[var(--border-color)] bg-[var(--bg-card)]/50 backdrop-blur-xl ring-1 ring-white/5">
+                                <p className="text-[10px] font-black uppercase tracking-[0.22em] text-[var(--text-muted)]">Review Guidance</p>
+                                <p className="mt-3 text-sm font-medium text-[var(--text-secondary)]">Use Audit Logs for full event detail, Security Alerts for triage, and Settings for prototype-level behavior switches.</p>
                             </Card>
                         </div>
                     </div>

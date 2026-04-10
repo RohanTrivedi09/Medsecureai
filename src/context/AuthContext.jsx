@@ -19,16 +19,14 @@ export const AuthProvider = ({ children }) => {
                     setLastLogin(res.data.lastLogin);
                 }
             })
-            .catch(() => {
-                // No valid session — stay logged out
-            })
+            .catch(() => undefined)
             .finally(() => setLoading(false));
     }, []);
 
-    const login = async (username, password) => {
+    const login = async (username, password, role) => {
         if (isLocked) return { success: false, message: 'Account locked' };
         try {
-            const res = await apiLogin(username, password);
+            const res = await apiLogin(username, password, role);
             if (res.success) {
                 setUser(res.data);
                 setLastLogin(res.data.lastLogin);
@@ -46,7 +44,7 @@ export const AuthProvider = ({ children }) => {
     };
 
     const logout = async () => {
-        try { await apiLogout(); } catch {}
+        try { await apiLogout(); } catch { return; }
         setUser(null);
         setLastLogin(null);
     };
@@ -58,4 +56,5 @@ export const AuthProvider = ({ children }) => {
     );
 };
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useAuth = () => useContext(AuthContext);

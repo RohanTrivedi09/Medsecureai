@@ -5,14 +5,23 @@ import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import { users, patients, auditLogs, notifications, nextLogId as _nextLogId, nextNotifId as _nextNotifId } from './data.js';
 const app = express();
-const PORT = 5001;
-const JWT_SECRET = 'medsecure_ai_jwt_secret_2026_zero_trust';
+const PORT = Number(process.env.PORT || 5001);
+const SALT_ROUNDS = Number(process.env.BCRYPT_SALT_ROUNDS || 10);
+const JWT_SECRET = process.env.JWT_SECRET || 'dev_only_medsecureai_secret_change_me';
+const CLIENT_ORIGINS = (process.env.CLIENT_ORIGIN
+    ? process.env.CLIENT_ORIGIN.split(',').map(origin => origin.trim()).filter(Boolean)
+    : ['http://localhost:3000', 'http://localhost:5173']);
 
 // ─────────────────────────────────────────────
 // Middleware
 // ─────────────────────────────────────────────
 app.use(cors({
-    origin: ['http://localhost:3000', 'http://localhost:5173'],
+    origin(origin, callback) {
+        if (!origin || CLIENT_ORIGINS.includes(origin)) {
+            return callback(null, true);
+        }
+        return callback(new Error('Not allowed by CORS'));
+    },
     credentials: true,
 }));
 app.use(express.json());
@@ -126,14 +135,18 @@ function roleMiddleware(role) {
 // Auth Routes
 // ─────────────────────────────────────────────
 app.post('/api/auth/login', (req, res) => {
-    const { username, password } = req.body;
-    if (!username || !password) {
-        return res.status(400).json({ success: false, message: 'Username and password are required' });
+    const { username, password, role } = req.body;
+    if (!username || !password || !role) {
+        return res.status(400).json({ success: false, message: 'Username, password, and role are required' });
     }
 
     const user = users.find(u => u.username === username.toLowerCase().trim() && u.isActive);
     if (!user) {
         return res.status(401).json({ success: false, message: 'Invalid credentials' });
+    }
+
+    if (user.role !== role) {
+        return res.status(403).json({ success: false, message: `Selected role does not match this account. Sign in as ${user.role}.` });
     }
 
     const validPassword = bcrypt.compareSync(password, user.passwordHash);
@@ -144,6 +157,8 @@ app.post('/api/auth/login', (req, res) => {
     // Update lastLogin
     user.lastLogin = new Date().toISOString();
 
+    const isSecureCookie = process.env.NODE_ENV === 'production';
+
     const token = jwt.sign(
         { id: user.id, username: user.username, displayName: user.displayName, role: user.role },
         JWT_SECRET,
@@ -152,7 +167,8 @@ app.post('/api/auth/login', (req, res) => {
 
     res.cookie('token', token, {
         httpOnly: true,
-        sameSite: 'lax',
+        sameSite: isSecureCookie ? 'none' : 'lax',
+        secure: isSecureCookie,
         maxAge: 8 * 60 * 60 * 1000,
     });
 
@@ -363,7 +379,11 @@ app.patch('/api/notifications/read-all', authMiddleware, (req, res) => {
 // Admin Routes
 // ─────────────────────────────────────────────
 app.get('/api/admin/users', authMiddleware, roleMiddleware('admin'), (req, res) => {
-    const safeUsers = users.map(({ passwordHash, ...u }) => u);
+    const safeUsers = users.map(user => {
+        const safeUser = { ...user };
+        delete safeUser.passwordHash;
+        return safeUser;
+    });
     return res.json({ success: true, data: safeUsers });
 });
 
@@ -386,7 +406,8 @@ app.post('/api/admin/users', authMiddleware, roleMiddleware('admin'), (req, res)
         lastLogin: null,
     };
     users.push(newUser);
-    const { passwordHash, ...safeUser } = newUser;
+    const safeUser = { ...newUser };
+    delete safeUser.passwordHash;
     return res.status(201).json({ success: true, data: safeUser });
 });
 
@@ -401,7 +422,8 @@ app.patch('/api/admin/users/:id', authMiddleware, roleMiddleware('admin'), (req,
     if (isActive !== undefined) user.isActive = isActive;
     if (password) user.passwordHash = bcrypt.hashSync(password, SALT_ROUNDS);
 
-    const { passwordHash, ...safeUser } = user;
+    const safeUser = { ...user };
+    delete safeUser.passwordHash;
     return res.json({ success: true, data: safeUser });
 });
 
@@ -410,7 +432,8 @@ app.delete('/api/admin/users/:id', authMiddleware, roleMiddleware('admin'), (req
     const user = users.find(u => u.id === id);
     if (!user) return res.status(404).json({ success: false, message: 'User not found' });
     user.isActive = false;
-    const { passwordHash, ...safeUser } = user;
+    const safeUser = { ...user };
+    delete safeUser.passwordHash;
     return res.json({ success: true, data: safeUser });
 });
 

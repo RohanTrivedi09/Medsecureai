@@ -3,13 +3,13 @@
 import axios from 'axios';
 
 const api = axios.create({
-    baseURL: '',
+    baseURL: import.meta.env.VITE_API_BASE_URL || '',
     withCredentials: true,
 });
 
 // ─── Auth ───────────────────────────────────────────────────
-export const apiLogin = (username, password) =>
-    api.post('/api/auth/login', { username, password }).then(r => r.data);
+export const apiLogin = (username, password, role) =>
+    api.post('/api/auth/login', { username, password, role }).then(r => r.data);
 
 export const apiLogout = () =>
     api.post('/api/auth/logout').then(r => r.data);
