@@ -1,7 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Shield, Lock, Activity, Brain, ArrowRight, ShieldCheck, Zap } from 'lucide-react';
-import { motion } from 'framer-motion';
 import Button from '../components/Button';
 import Card from '../components/Card';
 
@@ -57,13 +56,7 @@ const Landing = () => {
             </section>
 
             {/* Features Grid */}
-            <motion.section 
-                initial={{ opacity: 0 }}
-                whileInView={{ opacity: 1 }}
-                viewport={{ once: true }}
-                transition={{ duration: 1, delay: 0.2 }}
-                className="grid md:grid-cols-3 gap-8 py-24 w-full max-w-6xl px-4 relative z-10"
-            >
+            <section className="grid md:grid-cols-3 gap-8 py-24 w-full max-w-6xl px-4 relative z-10">
                 <FeatureCard
                     icon={<Lock className="h-8 w-8 text-[var(--accent-secondary)]" />}
                     title="Immutable Identity"
@@ -82,7 +75,7 @@ const Landing = () => {
                     description="Detailed log telemetry for compliance review. Visualizing every AI decision with risk-factor breakdown."
                     delay={0.3}
                 />
-            </motion.section>
+            </section>
 
             <div className="mt-12 mb-24 p-6 bg-[var(--bg-card)]/20 rounded-[2rem] border border-[var(--border-color)] max-w-3xl text-center backdrop-blur-xl ring-1 ring-white/5 relative z-10">
                 <div className="flex justify-center gap-8 mb-4 opacity-50 grayscale hover:grayscale-0 transition-all">
@@ -97,13 +90,8 @@ const Landing = () => {
     );
 };
 
-const FeatureCard = ({ icon, title, description, delay }) => (
-    <motion.div
-        initial={{ opacity: 0, y: 30 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true }}
-        transition={{ duration: 0.6, delay }}
-    >
+const FeatureCard = ({ icon, title, description }) => (
+    <div>
         <Card className="h-full hover:border-[var(--accent-primary)]/50 hover:bg-[var(--bg-card)] transition-all duration-500 bg-[var(--bg-card)]/40 backdrop-blur-xl group p-8 rounded-3xl border-[var(--border-color)] ring-1 ring-white/5 overflow-hidden relative">
             <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-[var(--accent-primary)]/5 to-transparent rounded-bl-full group-hover:scale-150 transition-transform duration-700"></div>
             <div className="mb-8 p-5 rounded-2xl bg-[var(--bg-dark)] w-fit group-hover:scale-110 group-hover:bg-[var(--bg-card)] transition-all duration-500 ring-1 ring-white/10 shadow-xl relative z-10">
@@ -112,7 +100,7 @@ const FeatureCard = ({ icon, title, description, delay }) => (
             <h3 className="text-2xl font-black mb-4 group-hover:text-[var(--accent-primary)] transition-colors italic tracking-tighter relative z-10">{title}</h3>
             <p className="text-[var(--text-secondary)] leading-relaxed font-medium relative z-10">{description}</p>
         </Card>
-    </motion.div>
+    </div>
 );
 
 export default Landing;

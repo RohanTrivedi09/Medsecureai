@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { FileText, Shield, AlertTriangle, CheckCircle, XCircle, Loader2 } from 'lucide-react';
@@ -16,7 +16,7 @@ const Records = () => {
     const [showModal, setShowModal] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
     const [filterSensitivity, setFilterSensitivity] = useState('All');
-    const [accessReason, setAccessReason] = useState('Treatment');
+    const accessReason = 'Treatment';
     const [patients, setPatients] = useState([]);
     
     // Notes & Flag state
@@ -35,27 +35,13 @@ const Records = () => {
             .catch(() => {});
     }, [searchTerm, filterSensitivity]);
 
-    // Handle auto-request access from dashboard link
-    useEffect(() => {
-        if (location.state?.autoRequestAccess) {
-            const patientToAutoRequest = location.state.autoRequestAccess;
-            // Clear the state so it doesn't re-trigger on reload
-            window.history.replaceState({}, document.title);
-            
-            // Short timeout to let the page render first if needed
-            setTimeout(() => {
-                handleRequestAccess(patientToAutoRequest);
-            }, 100);
-        }
-    }, [location.state]);
-
-    const handleRequestAccess = (patient) => {
+    const handleRequestAccess = useCallback((patient) => {
         setSelectedPatient(patient);
         setShowModal(true);
         setDecisionData(null);
         setAnalyzing(true);
 
-        requestPatientAccess(patient.patientId, accessReason)
+        requestPatientAccess(patient.patientId, 'Treatment')
             .then(res => {
                 setAnalyzing(false);
                 if (res.success) {
@@ -79,7 +65,18 @@ const Records = () => {
                 setAnalyzing(false);
                 setDecisionData({ decision: 'RESTRICTED', status: 'Blocked', riskScore: 90, message: 'Access Restricted — Server error' });
             });
-    };
+    }, []);
+
+    // Handle auto-request access from dashboard link
+    useEffect(() => {
+        if (location.state?.autoRequestAccess) {
+            const patientToAutoRequest = location.state.autoRequestAccess;
+            window.history.replaceState({}, document.title);
+            setTimeout(() => {
+                handleRequestAccess(patientToAutoRequest);
+            }, 100);
+        }
+    }, [handleRequestAccess, location.state]);
 
     const handleSaveNote = async () => {
         if (!newNote.trim() || !selectedPatient) return;

@@ -6,6 +6,7 @@ import { ShieldCheck, Activity, Cpu, Globe } from 'lucide-react';
 
 const Layout = () => {
     const location = useLocation();
+    const MotionDiv = motion.div;
 
     return (
         <div className="min-h-screen flex flex-col bg-[var(--bg-dark)] relative overflow-x-hidden">
@@ -16,7 +17,7 @@ const Layout = () => {
 
             <main className="flex-grow w-full max-w-none mx-auto px-4 md:px-8 py-8 relative z-10">
                 <AnimatePresence mode="wait">
-                    <motion.div
+                    <MotionDiv
                         key={location.pathname}
                         initial={{ opacity: 0, y: 15 }}
                         animate={{ opacity: 1, y: 0 }}
@@ -24,7 +25,7 @@ const Layout = () => {
                         transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
                     >
                         <Outlet />
-                    </motion.div>
+                    </MotionDiv>
                 </AnimatePresence>
             </main>
 

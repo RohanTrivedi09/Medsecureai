@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, { createContext, useState, useCallback } from 'react';
 import {
     getNotifications as apiGetNotifications,
     markNotificationRead as apiMarkRead,
@@ -19,28 +19,36 @@ export const DataProvider = ({ children }) => {
         try {
             const res = await apiGetNotifications();
             if (res.success) setNotifications(res.data);
-        } catch {}
+        } catch {
+            return null;
+        }
     }, []);
 
     const fetchLogs = useCallback(async (filters = {}) => {
         try {
             const res = await apiGetAuditLogs(filters);
             if (res.success) setLogs(res.data);
-        } catch {}
+        } catch {
+            return null;
+        }
     }, []);
 
     const markAsRead = async (id) => {
         try {
             await apiMarkRead(id);
             setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
-        } catch {}
+        } catch {
+            return null;
+        }
     };
 
     const markAllAsRead = async () => {
         try {
             await apiMarkAllRead();
             setNotifications(prev => prev.map(n => ({ ...n, read: true })));
-        } catch {}
+        } catch {
+            return null;
+        }
     };
 
     // Kept for backward compat with any component that adds a log entry locally
@@ -70,5 +78,3 @@ export const DataProvider = ({ children }) => {
         </DataContext.Provider>
     );
 };
-
-export const useData = () => useContext(DataContext);

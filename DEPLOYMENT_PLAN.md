@@ -11,8 +11,8 @@ This means the app can be deployed now for demo use, but not for production clin
 
 ## Recommended Deployment Architecture
 
-- Deploy frontend on `Vercel` or `Netlify`
-- Deploy backend on `Render`, `Railway`, or a small `Ubuntu VPS`
+- Deploy frontend on `Vercel`
+- Deploy backend on `Railway`
 - Keep frontend and backend on separate services
 - Use HTTPS on both
 - Set the frontend to call the backend using `VITE_API_BASE_URL`
@@ -21,7 +21,7 @@ This means the app can be deployed now for demo use, but not for production clin
 Example:
 
 - Frontend: `https://medsecureai-frontend.vercel.app`
-- Backend: `https://medsecureai-api.onrender.com`
+- Backend: `https://medsecureai-api.up.railway.app`
 
 ## Required Environment Variables
 
@@ -40,6 +40,11 @@ If you have multiple allowed frontends:
 ### Frontend
 
 - `VITE_API_BASE_URL=https://your-backend-domain.com`
+
+Example files are included:
+
+- [.env.backend.example](/Users/rohantrivedi/Downloads/Project/.env.backend.example:1)
+- [.env.frontend.example](/Users/rohantrivedi/Downloads/Project/.env.frontend.example:1)
 
 ## Step-by-Step Plan
 
@@ -101,23 +106,27 @@ npm run preview
 
 ## Recommended Platform Setup
 
-### Option 1: Vercel + Render
+### Option 1: Vercel + Railway
 
 - Frontend on Vercel
-- Backend on Render web service
-- Easiest demo setup
+- Backend on Railway web service
+- Best low-friction setup for this repo
 
-### Option 2: Netlify + Railway
+### Railway Setup
 
-- Frontend on Netlify
-- Backend on Railway
-- Also good for student/demo deployment
+1. Create a new Railway project from the repo.
+2. Set the start command to `npm start` if Railway does not detect it automatically.
+3. Add the backend environment variables from `.env.backend.example`.
+4. Deploy and confirm `GET /api/health` returns success.
 
-### Option 3: Single VPS
+### Vercel Setup
 
-- Frontend built and served through Nginx
-- Backend served with PM2
-- Better control, more setup effort
+1. Import the same repo into Vercel.
+2. Framework preset: `Vite`.
+3. Build command: `npm run build`
+4. Output directory: `dist`
+5. Add `VITE_API_BASE_URL` from `.env.frontend.example`.
+6. After Vercel gives you the final frontend domain, add that exact URL to Railway `CLIENT_ORIGIN`.
 
 ## Verification Checklist
 

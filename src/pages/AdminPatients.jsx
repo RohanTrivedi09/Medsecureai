@@ -27,11 +27,6 @@ const AdminPatients = () => {
 
     const conditionsList = ['Hypertension', 'Diabetes Type 2', 'Cardiac Arrhythmia', 'Brain Tumour', 'Lung Cancer', 'Fracture', 'Appendicitis', 'Kidney Stones', 'Migraine', 'Pneumonia', 'Coronary Artery Disease', 'Epilepsy', 'Osteoporosis', 'Anaemia', 'Stroke'];
 
-    useEffect(() => {
-        // Fetch all patients (no sensitivity filter here since admin is viewing all)
-        fetchData();
-    }, []);
-
     const fetchData = () => {
         getPatients()
             .then(res => { if (res.success) setPatients(res.data); })
@@ -48,6 +43,11 @@ const AdminPatients = () => {
             })
             .catch(() => {});
     };
+
+    useEffect(() => {
+        // Fetch all patients (no sensitivity filter here since admin is viewing all)
+        fetchData();
+    }, []);
 
     const openModal = (type, patient = null) => {
         setModal({ show: true, type, patient });

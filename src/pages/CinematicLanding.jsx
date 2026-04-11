@@ -1,12 +1,39 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Shield, Lock, Activity, ShieldCheck, ArrowRight, Zap } from 'lucide-react';
+import { Shield, Lock, Activity, ShieldCheck, ArrowRight } from 'lucide-react';
+
+const seededUnit = (seed) => {
+  const value = Math.sin(seed * 9999) * 10000;
+  return value - Math.floor(value);
+};
+
+const createNeurons = (count) => (
+  Array.from({ length: count }, (_, i) => ({
+    id: i,
+    x: seededUnit(i + 1) * 100,
+    y: seededUnit(i + 101) * 100,
+    size: seededUnit(i + 201) * 4 + 2,
+    delay: seededUnit(i + 301) * 2,
+    repeatDelay: seededUnit(i + 401) * 5,
+  }))
+);
+
+const createPulseParticles = (count) => (
+  Array.from({ length: count }, (_, i) => ({
+    id: i,
+    top: seededUnit(i + 501) * 100,
+    left: seededUnit(i + 601) * 100,
+    duration: 3 + seededUnit(i + 701) * 4,
+    delay: seededUnit(i + 801) * 5,
+  }))
+);
 
 const CinematicLanding = () => {
   const navigate = useNavigate();
   const [beat, setBeat] = useState(1);
   const [showSkip, setShowSkip] = useState(true);
+  const MotionDiv = motion.div;
 
   // Sequence Timing
   useEffect(() => {
@@ -33,16 +60,8 @@ const CinematicLanding = () => {
     setShowSkip(false);
   };
 
-  // Generate 16 neuron nodes with random positions
-  const neurons = useMemo(() => {
-    return [...Array(16)].map((_, i) => ({
-      id: i,
-      x: Math.random() * 100,
-      y: Math.random() * 100,
-      size: Math.random() * 4 + 2,
-      delay: Math.random() * 2
-    }));
-  }, []);
+  const neurons = useMemo(() => createNeurons(16), []);
+  const pulseParticles = useMemo(() => createPulseParticles(20), []);
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-[#0A0A1A] text-white relative overflow-hidden font-['Inter'] select-none">
@@ -50,7 +69,7 @@ const CinematicLanding = () => {
       <div className="cinematic-bg"></div>
       <div className="grain-overlay"></div>
       <div className={`tension-dim ${beat === 2 ? 'active' : ''}`}></div>
-      {beat === 2 && <motion.div animate={{ opacity: [0, 1, 0] }} transition={{ duration: 0.3 }} className="danger-flash active"></motion.div>}
+      {beat === 2 && <MotionDiv animate={{ opacity: [0, 1, 0] }} transition={{ duration: 0.3 }} className="danger-flash active"></MotionDiv>}
       
       <div className={`radial-glow ${beat >= 3 ? 'animate-glow-breathe' : ''}`} 
            style={{ opacity: beat >= 3 ? 1 : 0, transition: 'opacity 1s ease' }}></div>
@@ -168,7 +187,7 @@ const CinematicLanding = () => {
                           delay: n.delay + 1, 
                           duration: 2, 
                           repeat: Infinity,
-                          repeatDelay: Math.random() * 5 
+                          repeatDelay: n.repeatDelay
                         }}
                       >
                         <animateMotion
@@ -339,19 +358,19 @@ const CinematicLanding = () => {
       {/* Persistent Neural Pulse (Beat 6 Loop) */}
       {beat === 6 && (
         <div className="fixed inset-0 pointer-events-none opacity-10">
-          {[...Array(20)].map((_, i) => (
+          {pulseParticles.map((particle) => (
             <motion.div
-              key={i}
+              key={particle.id}
               className="absolute h-1 w-1 bg-[var(--accent-bio-green)] rounded-full"
-              style={{ top: `${Math.random() * 100}%`, left: `${Math.random() * 100}%` }}
+              style={{ top: `${particle.top}%`, left: `${particle.left}%` }}
               animate={{ 
                 opacity: [0, 0.4, 0], 
                 scale: [0.5, 1.2, 0.5],
               }}
               transition={{ 
-                duration: 3 + Math.random() * 4, 
+                duration: particle.duration,
                 repeat: Infinity, 
-                delay: Math.random() * 5 
+                delay: particle.delay
               }}
             />
           ))}

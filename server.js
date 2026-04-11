@@ -11,6 +11,18 @@ const JWT_SECRET = process.env.JWT_SECRET || 'dev_only_medsecureai_secret_change
 const CLIENT_ORIGINS = (process.env.CLIENT_ORIGIN
     ? process.env.CLIENT_ORIGIN.split(',').map(origin => origin.trim()).filter(Boolean)
     : ['http://localhost:3000', 'http://localhost:5173']);
+const isProduction = process.env.NODE_ENV === 'production';
+
+app.set('trust proxy', 1);
+
+function getCookieOptions() {
+    return {
+        httpOnly: true,
+        sameSite: isProduction ? 'none' : 'lax',
+        secure: isProduction,
+        maxAge: 8 * 60 * 60 * 1000,
+    };
+}
 
 // ─────────────────────────────────────────────
 // Middleware
@@ -26,6 +38,10 @@ app.use(cors({
 }));
 app.use(express.json());
 app.use(cookieParser());
+
+app.get('/api/health', (_req, res) => {
+    res.json({ success: true, data: { status: 'ok' } });
+});
 
 // ─────────────────────────────────────────────
 // In-Memory Store (imported from data.js)
@@ -157,20 +173,13 @@ app.post('/api/auth/login', (req, res) => {
     // Update lastLogin
     user.lastLogin = new Date().toISOString();
 
-    const isSecureCookie = process.env.NODE_ENV === 'production';
-
     const token = jwt.sign(
         { id: user.id, username: user.username, displayName: user.displayName, role: user.role },
         JWT_SECRET,
         { expiresIn: '8h' }
     );
 
-    res.cookie('token', token, {
-        httpOnly: true,
-        sameSite: isSecureCookie ? 'none' : 'lax',
-        secure: isSecureCookie,
-        maxAge: 8 * 60 * 60 * 1000,
-    });
+    res.cookie('token', token, getCookieOptions());
 
     return res.json({
         success: true,
@@ -186,14 +195,14 @@ app.post('/api/auth/login', (req, res) => {
 });
 
 app.post('/api/auth/logout', (req, res) => {
-    res.clearCookie('token');
+    res.clearCookie('token', getCookieOptions());
     return res.json({ success: true, data: null });
 });
 
 app.get('/api/auth/me', authMiddleware, (req, res) => {
     const user = users.find(u => u.id === req.user.id);
     if (!user || !user.isActive) {
-        res.clearCookie('token');
+        res.clearCookie('token', getCookieOptions());
         return res.status(401).json({ success: false, message: 'User not found or inactive' });
     }
     return res.json({
