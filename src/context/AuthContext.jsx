@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { apiLogin, apiLogout, apiGetMe } from '../api';
+import { apiLogin, apiLogout, apiGetMe, setStoredToken } from '../api';
 
 const AuthContext = createContext(null);
 
@@ -28,6 +28,7 @@ export const AuthProvider = ({ children }) => {
         try {
             const res = await apiLogin(username, password, role);
             if (res.success) {
+                setStoredToken(res.token);
                 setUser(res.data);
                 setLastLogin(res.data.lastLogin);
                 setFailedAttempts(0);
@@ -45,6 +46,7 @@ export const AuthProvider = ({ children }) => {
 
     const logout = async () => {
         try { await apiLogout(); } catch { return; }
+        setStoredToken(null);
         setUser(null);
         setLastLogin(null);
     };

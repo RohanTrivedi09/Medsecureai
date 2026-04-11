@@ -2,9 +2,27 @@
 // axios.defaults.withCredentials = true is set in main.jsx
 import axios from 'axios';
 
+const TOKEN_STORAGE_KEY = 'medsecureai_token';
+
+export const getStoredToken = () => localStorage.getItem(TOKEN_STORAGE_KEY);
+
+export const setStoredToken = (token) => {
+    if (token) localStorage.setItem(TOKEN_STORAGE_KEY, token);
+    else localStorage.removeItem(TOKEN_STORAGE_KEY);
+};
+
 const api = axios.create({
     baseURL: import.meta.env.VITE_API_BASE_URL || '',
     withCredentials: true,
+});
+
+api.interceptors.request.use((config) => {
+    const token = getStoredToken();
+    if (token) {
+        config.headers = config.headers || {};
+        config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
 });
 
 // ─── Auth ───────────────────────────────────────────────────

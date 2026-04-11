@@ -125,7 +125,10 @@ function aiDecisionEngine(patient, username) {
 // Auth Middleware
 // ─────────────────────────────────────────────
 function authMiddleware(req, res, next) {
-    const token = req.cookies.token;
+    const cookieToken = req.cookies.token;
+    const authHeader = req.headers.authorization || '';
+    const bearerToken = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
+    const token = cookieToken || bearerToken;
     if (!token) {
         return res.status(401).json({ success: false, message: 'Not authenticated' });
     }
@@ -190,7 +193,8 @@ app.post('/api/auth/login', (req, res) => {
             name: user.username,
             role: user.role,
             lastLogin: user.lastLogin,
-        }
+        },
+        token,
     });
 });
 
